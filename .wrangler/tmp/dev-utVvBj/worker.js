@@ -103,12 +103,13 @@ function parse(gvizText, htmlText) {
   if (json.status === "error") throw new Error(json.errors?.[0]?.detailed_message || "\uC2DC\uD2B8 \uC624\uB958");
   const rows = json.table.rows.map((r) => (r.c || []).map((c) => (c && c.v != null ? String(c.f ?? c.v) : "").trim()));
   const images = parseImages(htmlText);
+  const elements = parseElements(htmlText);
   const intro = [];
   const list = [];
   for (const r of rows) {
     const name = r[COL.name] || "";
     if (name && r[COL.company] && name !== "\uCE90\uB9AD\uD130\uBA85") {
-      list.push(toNikke(r, images));
+      list.push(toNikke(r, images, elements));
     } else if (!list.length && name && name !== "\uCE90\uB9AD\uD130\uBA85") {
       intro.push(name);
     } else {
@@ -121,7 +122,7 @@ function parse(gvizText, htmlText) {
 __name(parse, "parse");
 var lines = /* @__PURE__ */ __name((s) => (s || "").split("\n").map((x) => x.trim()).filter(Boolean), "lines");
 var normName = /* @__PURE__ */ __name((s) => s.replace(/[\s:：()（）]/g, ""), "normName");
-function toNikke(r, images) {
+function toNikke(r, images, elements) {
   const nameLines = lines(r[COL.name]);
   const full = nameLines.join(" ").replace(/\s*:\s*/g, " : ").replace(/\s+/g, " ").trim();
   const [main, ...rest] = full.split(" : ");
@@ -136,6 +137,8 @@ function toNikke(r, images) {
     name: main,
     sub: rest.join(" : "),
     image: images.get(normName(full)) || "",
+    element: elements.get(normName(full)) || "",
+    // 속성 (작열·수냉·풍압·전격·철갑). 못 찾으면 빈 값
     company: r[COL.company],
     weapon: r[COL.weapon].replace("\uB7F0\uCCD0", "\uB7F0\uCC98"),
     skills,
@@ -166,6 +169,49 @@ function parseImages(html) {
   return map;
 }
 __name(parseImages, "parseImages");
+var ELEMENT_ANCHORS = {
+  "\uBAA8\uB354\uB2C8\uC544": "\uC791\uC5F4",
+  "\uD5EC\uB984": "\uC218\uB0C9",
+  "\uB178\uC544": "\uD48D\uC555",
+  "\uC5D1\uC2DC\uC544": "\uC804\uACA9",
+  "\uB808\uB4DC\uD6C4\uB4DC": "\uCCA0\uAC11"
+};
+function parseElements(html) {
+  const result = /* @__PURE__ */ new Map();
+  if (!html) return result;
+  const starts = [];
+  for (const row of html.split(/<tr[\s>]/).slice(1)) {
+    const rowNo = row.match(/id="0R(\d+)"/);
+    if (!rowNo) continue;
+    const cells = row.split(/<td[\s>]/).slice(1);
+    const i = cells.findIndex((c) => c.includes("sheets-images-rt/"));
+    if (i < 0 || !cells[i + 1]) continue;
+    const name = decode(cells[i + 1].replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").replace(/^[^>]*>/, ""));
+    if (name) starts.push({ row: Number(rowNo[1]), key: normName(name) });
+  }
+  starts.sort((a, b) => a.row - b.row);
+  const src = /* @__PURE__ */ new Map();
+  for (const m of html.matchAll(/id='(embed_\d+)'[^>]*><img src='https:\/\/docs\.google\.com\/sheets-images-rt\/([^'=]+)/g)) src.set(m[1], m[2]);
+  const iconOf = /* @__PURE__ */ new Map();
+  for (const m of html.matchAll(/posObj\('0', '(embed_\d+)', (\d+), (\d+), (\d+), \d+\)/g)) {
+    const [, id, row, col, x] = m;
+    if (Number(col) !== 1 || Number(x) < 40 || !src.has(id)) continue;
+    let owner = null;
+    for (const s of starts) if (s.row <= Number(row)) owner = s;
+    else break;
+    if (owner) iconOf.set(owner.key, src.get(id));
+  }
+  const elementOfIcon = /* @__PURE__ */ new Map();
+  for (const [name, element] of Object.entries(ELEMENT_ANCHORS)) {
+    const icon = iconOf.get(normName(name));
+    if (icon) elementOfIcon.set(icon, element);
+  }
+  for (const [key, icon] of iconOf) {
+    if (elementOfIcon.has(icon)) result.set(key, elementOfIcon.get(icon));
+  }
+  return result;
+}
+__name(parseElements, "parseElements");
 function decode(s) {
   return s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ").trim();
 }

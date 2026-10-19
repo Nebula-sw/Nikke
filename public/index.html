@@ -220,11 +220,13 @@
     content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
     background: linear-gradient(180deg, var(--co, var(--dim)), color-mix(in srgb, var(--co, var(--dim)) 25%, transparent));
   }
-  .card[data-co="엘리시온"] { --co: #4f8dff; }
-  .card[data-co="미실리스"] { --co: #ffb547; }
-  .card[data-co="테트라"] { --co: #ff6fd8; }
-  .card[data-co="필그림"] { --co: #55e39a; }
-  .card[data-co="어브노멀"] { --co: #ff4655; }
+  /* 카드 색 = 속성 (게임과 같은 색: 작열 빨강 · 수냉 파랑 · 풍압 초록 · 전격 보라 · 철갑 노랑)
+     기업은 색으로 나누지 않음 (속성 색과 헷갈리지 않게) */
+  [data-el="작열"] { --co: #ff4d5e; }
+  [data-el="수냉"] { --co: #3d9bff; }
+  [data-el="풍압"] { --co: #34d58c; }
+  [data-el="전격"] { --co: #b06cff; }
+  [data-el="철갑"] { --co: #ffb33f; }
 
   .head { display: flex; gap: 12px; align-items: center; }
   .portrait {
@@ -246,7 +248,8 @@
     font-size: 11px; line-height: 1; padding: 4px 7px; color: var(--muted);
     border: 1px solid var(--line-hi); background: var(--well);
   }
-  .pill.co { color: #0d1117; background: var(--co); border-color: var(--co); font-weight: 700; } /* 기업 이름은 색을 꽉 채운 배지로 */
+  .pill.el { color: #0d1117; background: var(--co); border-color: var(--co); font-weight: 700; } /* 속성은 색을 꽉 채운 배지로 */
+  .chip[data-el]::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--co); margin-right: 6px; vertical-align: 0; }
   .pill.mode { font: 700 11px/1 var(--display); letter-spacing: .1em; }
   .pill.pve { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
   .pill.pvp { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
@@ -353,6 +356,7 @@
   </div>
 
   <div class="filters">
+    <div class="frow" data-key="element"><span class="label">속성</span></div>
     <div class="frow" data-key="company"><span class="label">기업</span></div>
     <div class="frow" data-key="weapon"><span class="label">무기</span></div>
     <div class="frow" data-key="mode"><span class="label">사용처</span></div>
@@ -369,7 +373,7 @@
 <footer>데이터 출처: [승리의 여신 : 니케] 육성 시트 · 시트가 수정되면 몇 분 안에 자동 반영됩니다</footer>
 
 <script>
-const state = { list: [], q: "", fav: false, company: "", weapon: "", mode: "" };
+const state = { list: [], q: "", fav: false, element: "", company: "", weapon: "", mode: "" };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
 async function load(fresh) {
@@ -391,14 +395,15 @@ function card(n) {
     ? n.coll.map(c => `<span class="${/^\(.*\)$/.test(c) ? "alt" : ""}">${esc(c)}</span>`).join("")
     : `<span>-</span>`;
   return `
-  <article class="card" data-co="${esc(n.company)}">
+  <article class="card" data-el="${esc(n.element)}">
     <div class="head">
       <div class="portrait">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="retryImg(this)">` : ""}</div>
       <div class="names">
         <div class="name">${esc(n.name)}</div>
         ${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ""}
         <div class="meta">
-          <span class="pill co">${esc(n.company)}</span>
+          ${n.element ? `<span class="pill el">${esc(n.element)}</span>` : ""}
+          <span class="pill">${esc(n.company)}</span>
           <span class="pill">${esc(n.weapon)}</span>
           ${n.modes.map(m => `<span class="pill mode ${m.toLowerCase()}">${m}</span>`).join("")}
           ${n.favorite ? `<span class="pill fav">애장품${n.favPriority ? " · " + esc(n.favPriority) : ""}</span>` : ""}
@@ -443,6 +448,7 @@ function retryImg(img) {
 function render() {
   const q = state.q.trim().toLowerCase();
   const view = state.list.filter(n =>
+    (!state.element || n.element === state.element) &&
     (!state.company || n.company === state.company) &&
     (!state.weapon || n.weapon === state.weapon) &&
     (!state.mode || n.modes.includes(state.mode)) &&
@@ -457,6 +463,7 @@ function render() {
 
 function buildFilters() {
   const opts = {
+    element: ["작열", "수냉", "풍압", "전격", "철갑"].filter(e => state.list.some(n => n.element === e)),
     company: [...new Set(state.list.map(n => n.company))],
     weapon: [...new Set(state.list.map(n => n.weapon))],
     mode: ["PVE", "PVP"],
@@ -468,6 +475,7 @@ function buildFilters() {
       const b = document.createElement("button");
       b.className = "chip" + (state[key] === v ? " on" : "");
       b.textContent = v || "전체";
+      if (key === "element" && v) b.dataset.el = v; // 속성 버튼에 색 점
       b.onclick = () => {
         state[key] = v;
         row.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
@@ -496,7 +504,7 @@ async function refresh(fresh) {
     const data = await load(fresh);
     state.list = data.list.map(n => ({
       ...n,
-      text: [n.name, n.sub, n.company, n.weapon, ...n.cube, ...n.extra, ...n.usage, ...n.overload.flat(), ...n.footnotes]
+      text: [n.name, n.sub, n.element, n.company, n.weapon, ...n.cube, ...n.extra, ...n.usage, ...n.overload.flat(), ...n.footnotes]
         .join(" ").toLowerCase(),
     }));
     renderBrief(data.intro);

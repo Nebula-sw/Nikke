@@ -101,13 +101,14 @@ export function parse(gvizText, htmlText) {
   if (json.status === "error") throw new Error(json.errors?.[0]?.detailed_message || "시트 오류");
   const rows = json.table.rows.map(r => (r.c || []).map(c => (c && c.v != null ? String(c.f ?? c.v) : "").trim()));
   const images = parseImages(htmlText);
+  const elements = parseElements(htmlText);
 
   const intro = [];
   const list = [];
   for (const r of rows) {
     const name = r[COL.name] || "";
     if (name && r[COL.company] && name !== "캐릭터명") {
-      list.push(toNikke(r, images));
+      list.push(toNikke(r, images, elements));
     } else if (!list.length && name && name !== "캐릭터명") {
       intro.push(name);
     } else {
@@ -122,7 +123,7 @@ export function parse(gvizText, htmlText) {
 const lines = s => (s || "").split("\n").map(x => x.trim()).filter(Boolean);
 const normName = s => s.replace(/[\s:：()（）]/g, "");
 
-function toNikke(r, images) {
+function toNikke(r, images, elements) {
   const nameLines = lines(r[COL.name]);
   const full = nameLines.join(" ").replace(/\s*:\s*/g, " : ").replace(/\s+/g, " ").trim();
   const [main, ...rest] = full.split(" : ");
@@ -139,6 +140,7 @@ function toNikke(r, images) {
     name: main,
     sub: rest.join(" : "),
     image: images.get(normName(full)) || "",
+    element: elements.get(normName(full)) || "", // 속성 (작열·수냉·풍압·전격·철갑). 못 찾으면 빈 값
     company: r[COL.company],
     weapon: r[COL.weapon].replace("런쳐", "런처"),
     skills,
@@ -169,6 +171,61 @@ function parseImages(html) {
     });
   }
   return map;
+}
+
+// ── 속성 ──
+// 시트에는 속성이 글자로 없고, 초상화 오른쪽 아래에 '떠 있는 아이콘 그림'으로만 붙어 있음.
+// 그 그림은 직접 받아볼 수 없어서(구글이 막음), 그림 주소가 같은 것끼리 묶은 뒤
+// 속성을 확실히 아는 기준 니케가 어느 묶음에 있는지로 각 묶음의 속성을 정함.
+// (시트 주인이 아이콘을 바꿔 올려도 기준 니케만 있으면 자동으로 다시 맞춰짐)
+const ELEMENT_ANCHORS = {
+  "모더니아": "작열",
+  "헬름": "수냉",
+  "노아": "풍압",
+  "엑시아": "전격",
+  "레드후드": "철갑",
+};
+
+function parseElements(html) {
+  const result = new Map();
+  if (!html) return result;
+
+  // 1) 니케마다 시작 행 번호 + 이름 (초상화 칸의 행 번호, 바로 오른쪽 칸이 이름)
+  const starts = [];
+  for (const row of html.split(/<tr[\s>]/).slice(1)) {
+    const rowNo = row.match(/id="0R(\d+)"/);
+    if (!rowNo) continue;
+    const cells = row.split(/<td[\s>]/).slice(1);
+    const i = cells.findIndex(c => c.includes("sheets-images-rt/"));
+    if (i < 0 || !cells[i + 1]) continue;
+    const name = decode(cells[i + 1].replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").replace(/^[^>]*>/, ""));
+    if (name) starts.push({ row: Number(rowNo[1]), key: normName(name) });
+  }
+  starts.sort((a, b) => a.row - b.row);
+
+  // 2) 떠 있는 그림들: id → 그림 주소, 그리고 위치(행, 열, 칸 안 x좌표)
+  const src = new Map();
+  for (const m of html.matchAll(/id='(embed_\d+)'[^>]*><img src='https:\/\/docs\.google\.com\/sheets-images-rt\/([^'=]+)/g)) src.set(m[1], m[2]);
+  const iconOf = new Map(); // 니케 이름 → 속성 아이콘 주소
+  for (const m of html.matchAll(/posObj\('0', '(embed_\d+)', (\d+), (\d+), (\d+), \d+\)/g)) {
+    const [, id, row, col, x] = m;
+    // 속성 아이콘 = 초상화 칸(B열 = 1)의 오른쪽(x ≥ 40)에 놓인 것. 왼쪽 위 것은 버스트 아이콘
+    if (Number(col) !== 1 || Number(x) < 40 || !src.has(id)) continue;
+    let owner = null;
+    for (const s of starts) if (s.row <= Number(row)) owner = s; else break;
+    if (owner) iconOf.set(owner.key, src.get(id));
+  }
+
+  // 3) 기준 니케로 아이콘 주소 → 속성 정하기
+  const elementOfIcon = new Map();
+  for (const [name, element] of Object.entries(ELEMENT_ANCHORS)) {
+    const icon = iconOf.get(normName(name));
+    if (icon) elementOfIcon.set(icon, element);
+  }
+  for (const [key, icon] of iconOf) {
+    if (elementOfIcon.has(icon)) result.set(key, elementOfIcon.get(icon));
+  }
+  return result;
 }
 
 function decode(s) {
