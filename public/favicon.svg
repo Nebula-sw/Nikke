@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Nebula 로고: 보라→분홍 구름 + 흰 테두리 금별 -->
+  <defs>
+    <linearGradient id="nbl-cloud" gradientUnits="userSpaceOnUse" x1="2" y1="6" x2="30" y2="28">
+      <stop offset="0" stop-color="#9a7cff"/><stop offset="1" stop-color="#f0709c"/>
+    </linearGradient>
+    <linearGradient id="nbl-star" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe794"/><stop offset="1" stop-color="#ffaa4a"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#nbl-cloud)">
+    <rect x="1.5" y="16.5" width="29" height="11" rx="5.5"/>
+    <circle cx="9.8" cy="17" r="6.6"/>
+    <circle cx="18.8" cy="13.8" r="8.3"/>
+    <circle cx="25.8" cy="19" r="4.7"/>
+  </g>
+  <path transform="translate(16 18) scale(6.154)" fill="#fff" stroke="#fff" stroke-width=".32" stroke-linejoin="round" d="M0-1 .27-.372.951-.309.437.142.588.809 0 .46-.588.809-.437.142-.951-.309-.27-.372Z"/>
+  <path transform="translate(16 18) scale(4.923)" fill="url(#nbl-star)" stroke="url(#nbl-star)" stroke-width=".32" stroke-linejoin="round" d="M0-1 .27-.372.951-.309.437.142.588.809 0 .46-.588.809-.437.142-.951-.309-.27-.372Z"/>
+</svg>
