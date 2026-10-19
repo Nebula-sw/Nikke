@@ -3,162 +3,475 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NIKKE</title>
+<title>NIKKE · SSR 세팅 가이드</title>
+<meta name="description" content="SSR 니케 캐릭터별 스킬·오버로드·큐브·소장품 세팅 가이드">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f7f7f5; --surface: #fff; --text: #1d1d1b; --muted: #6b6b66;
-    --border: #e3e3de; --accent: #2f6fdf; --row-hover: #f1f4fb;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #161615; --surface: #1f1f1d; --text: #ececea; --muted: #9a9a94;
-      --border: #33332f; --accent: #7aa7ff; --row-hover: #262a33;
-    }
+    --bg: #06080c;
+    --panel: #0c1118;
+    --panel-2: #111823;
+    --line: #1c2733;
+    --line-hi: #2c3b4b;
+    --text: #e6edf3;
+    --muted: #7d8a99;
+    --dim: #4a5664;
+    --accent: #ff4655;
+    --accent-soft: rgba(255, 70, 85, .14);
+    --amber: #ffb547;
+    --cyan: #3ad7f5;
+    --cyan-soft: rgba(58, 215, 245, .12);
+    --green: #55e39a;
+    --display: "Rajdhani", "Noto Sans KR", sans-serif;
+    --body: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
   }
   * { box-sizing: border-box; }
+  html { background: var(--bg); }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    margin: 0; color: var(--text); font: 14px/1.55 var(--body);
+    background:
+      linear-gradient(rgba(58, 215, 245, .035) 1px, transparent 1px) 0 0 / 100% 32px,
+      linear-gradient(90deg, rgba(58, 215, 245, .035) 1px, transparent 1px) 0 0 / 32px 100%,
+      radial-gradient(1200px 600px at 85% -10%, rgba(255, 70, 85, .12), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
-  main { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
-  h1 { font-size: 24px; margin: 0 0 4px; }
-  .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  input[type=search] {
-    flex: 1; min-width: 200px; padding: 10px 12px; font: inherit;
-    border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface); color: var(--text);
+  a { color: var(--cyan); }
+
+  /* ---------- header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(12, 17, 24, .95), rgba(6, 8, 12, .85));
+    backdrop-filter: blur(6px);
+    position: sticky; top: 0; z-index: 10;
   }
-  button {
-    padding: 10px 14px; font: inherit; border-radius: 8px; cursor: pointer;
-    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  .bar {
+    max-width: 1320px; margin: 0 auto; padding: 14px 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
-  .table-wrap {
-    overflow-x: auto; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 10px;
+  .logo { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+  .logo b {
+    font: 700 26px/1 var(--display); letter-spacing: .18em; color: var(--text);
+    text-shadow: 0 0 18px rgba(255, 70, 85, .45);
   }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th {
-    position: sticky; top: 0; background: var(--surface); font-weight: 600;
-    white-space: nowrap; cursor: pointer; user-select: none;
+  .logo b::first-letter { color: var(--accent); }
+  .logo span {
+    font: 600 12px/1 var(--display); letter-spacing: .25em; color: var(--muted);
+    text-transform: uppercase;
   }
-  th .arrow { color: var(--muted); font-size: 11px; margin-left: 4px; }
-  tbody tr:hover { background: var(--row-hover); }
-  tbody tr:last-child td { border-bottom: 0; }
-  td a { color: var(--accent); }
-  .status { padding: 24px; text-align: center; color: var(--muted); }
-  .error { color: #d14343; }
+  .status-line {
+    font: 500 12px/1 var(--display); letter-spacing: .12em; color: var(--muted);
+    display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); }
+  .dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.err { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .dot.load { background: var(--amber); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  main { max-width: 1320px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* ---------- briefing ---------- */
+  .brief {
+    border: 1px solid var(--line); background: var(--panel);
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+    margin-bottom: 20px;
+  }
+  .brief summary {
+    list-style: none; cursor: pointer; padding: 12px 18px;
+    display: flex; align-items: center; gap: 10px;
+    font: 600 13px/1 var(--display); letter-spacing: .2em; color: var(--amber);
+    text-transform: uppercase;
+  }
+  .brief summary::-webkit-details-marker { display: none; }
+  .brief summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 18px; }
+  .brief[open] summary::after { content: "−"; }
+  .brief-body { padding: 0 18px 16px; color: #c3ccd6; white-space: pre-line; font-size: 13px; }
+  .brief-body p { margin: 0 0 6px; }
+  .brief-body .warn { color: var(--amber); }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-bottom: 14px;
+  }
+  .search {
+    position: relative;
+  }
+  .search input {
+    width: 100%; padding: 12px 14px 12px 40px; font: inherit; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 0;
+    outline: none; transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan-soft); }
+  .search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .btn {
+    font: 600 13px/1 var(--display); letter-spacing: .15em; text-transform: uppercase;
+    padding: 0 18px; color: var(--text); background: var(--panel-2);
+    border: 1px solid var(--line-hi); cursor: pointer; transition: all .15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
+  .filters .label {
+    font: 600 11px/1 var(--display); letter-spacing: .2em; color: var(--muted);
+    text-transform: uppercase; margin-right: 4px;
+  }
+  .chip {
+    font: 500 12px/1 var(--body); padding: 7px 12px; cursor: pointer;
+    color: var(--muted); background: transparent; border: 1px solid var(--line-hi);
+    transition: all .15s;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on { color: var(--bg); background: var(--cyan); border-color: var(--cyan); font-weight: 700; }
+  .sep { width: 1px; height: 18px; background: var(--line-hi); margin: 0 6px; }
+  .count { margin-left: auto; font: 600 13px/1 var(--display); letter-spacing: .12em; color: var(--muted); }
+  .count b { color: var(--text); font-size: 16px; }
+
+  /* ---------- grid ---------- */
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  }
+  .card {
+    position: relative; background: linear-gradient(160deg, var(--panel-2), var(--panel) 40%);
+    border: 1px solid var(--line);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--line-hi); transform: translateY(-2px); }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--imp, var(--dim));
+  }
+  .card[data-imp="높음"] { --imp: var(--accent); }
+  .card[data-imp="보통"] { --imp: var(--amber); }
+  .card[data-imp="낮음"] { --imp: var(--cyan); }
+  .card[data-imp="X"] { --imp: var(--dim); }
+
+  .head { display: flex; gap: 12px; align-items: flex-start; }
+  .no {
+    font: 700 11px/1 var(--display); letter-spacing: .1em; color: var(--dim);
+    padding-top: 4px; min-width: 26px;
+  }
+  .names { flex: 1; min-width: 0; }
+  .name { font-size: 18px; font-weight: 700; line-height: 1.25; }
+  .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge {
+    font: 700 11px/1 var(--display); letter-spacing: .12em; padding: 5px 8px;
+    border: 1px solid currentColor; white-space: nowrap; text-transform: uppercase;
+  }
+  .badge.imp { color: var(--imp, var(--dim)); }
+  .badge.fav { color: #ff8bd1; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 12px; color: var(--cyan); background: var(--cyan-soft); padding: 3px 8px; }
+
+  .sec-title {
+    font: 600 11px/1 var(--display); letter-spacing: .22em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 8px;
+  }
+  .sec-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .skills { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .lv {
+    font: 700 15px/1 var(--display); letter-spacing: .06em; padding: 7px 10px;
+    background: #0a0f15; border: 1px solid var(--line-hi); white-space: nowrap;
+  }
+  .lv:last-child { border-color: var(--accent); color: #fff; box-shadow: inset 0 0 12px var(--accent-soft); }
+  .arrow { color: var(--dim); font-size: 12px; }
+
+  .ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .ol div {
+    font-size: 12px; padding: 6px 8px; background: #0a0f15; border: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: 6px; align-items: center; min-width: 0;
+  }
+  .ol div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ol div em { font: 700 13px/1 var(--display); font-style: normal; color: var(--amber); }
+  .ol div:first-child { border-color: rgba(255, 181, 71, .45); }
+
+  .gear { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+  .cubes { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cube { font-size: 12px; padding: 5px 9px; border: 1px solid var(--line-hi); background: #0a0f15; }
+  .cube:first-child { border-color: var(--cyan); color: var(--cyan); }
+  .coll { font: 700 15px/1 var(--display); letter-spacing: .08em; padding: 6px 10px; border: 1px solid var(--line-hi); text-align: center; }
+
+  .notes { margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: #b9c3ce; }
+  .notes li { padding-left: 14px; position: relative; }
+  .notes li::before { content: "›"; position: absolute; left: 2px; color: var(--accent); }
+
+  .none { color: var(--dim); font-size: 12px; }
+
+  .empty, .loading {
+    grid-column: 1 / -1; text-align: center; padding: 60px 0; color: var(--muted);
+    font: 600 14px/1.6 var(--display); letter-spacing: .2em; text-transform: uppercase;
+  }
+  .loading::after { content: ""; display: block; width: 120px; height: 2px; margin: 18px auto 0;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    background-size: 200% 100%; animation: scan 1.2s linear infinite; }
+  @keyframes scan { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  footer { text-align: center; color: var(--dim); font-size: 12px; padding: 0 16px 32px; }
+
+  @media (max-width: 560px) {
+    .bar { padding: 12px 16px; }
+    .logo b { font-size: 22px; }
+    .status-line { width: 100%; }
+    .count { width: 100%; margin: 6px 0 0; }
+    .sep { display: none; }
+  }
 </style>
 </head>
 <body>
+<header>
+  <div class="bar">
+    <div class="logo"><b>NIKKE</b><span>SSR Setting Guide</span></div>
+    <div class="status-line"><i class="dot load" id="dot"></i><span id="status">Syncing…</span></div>
+  </div>
+</header>
+
 <main>
-  <h1 id="title">NIKKE</h1>
-  <div class="meta" id="meta">불러오는 중…</div>
-  <div class="toolbar">
-    <input type="search" id="q" placeholder="검색">
-    <button id="reload">새로고침</button>
+  <details class="brief" id="brief" hidden>
+    <summary>Briefing · 세팅 가이드 안내</summary>
+    <div class="brief-body" id="briefBody"></div>
+  </details>
+
+  <div class="controls">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="q" placeholder="니케 이름, 태그, 비고 검색" autocomplete="off">
+    </label>
+    <button class="btn" id="reload">Sync</button>
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead id="thead"></thead>
-      <tbody id="tbody"><tr><td class="status">불러오는 중…</td></tr></tbody>
-    </table>
+
+  <div class="filters" id="filters">
+    <span class="label">오버로드</span>
+    <button class="chip on" data-imp="">전체</button>
+    <button class="chip" data-imp="높음">높음</button>
+    <button class="chip" data-imp="보통">보통</button>
+    <button class="chip" data-imp="낮음">낮음</button>
+    <button class="chip" data-imp="X">X</button>
+    <span class="sep"></span>
+    <button class="chip" id="favToggle">애장품만</button>
+    <span class="count" id="count"></span>
   </div>
+
+  <div class="grid" id="grid"><div class="loading">Loading data</div></div>
 </main>
+
+<footer>데이터 출처: SSR 니케 육성 스프레드시트 · 시트가 수정되면 자동으로 반영됩니다</footer>
 
 <script>
 // ===== 설정 =====
 const SHEET_ID = "1IvaV9_REBew6dSri571JopqcBbJ5QL2tToWglHhIMH4";
-const GID = "2810458";             // 시트 탭 ID (URL의 #gid= 값)
-const AUTO_REFRESH_SECONDS = 60;   // 0이면 자동 갱신 끔
+const GID = "2810458";       // "SSR 캐릭터 별 세팅" 탭
+const BLOCK_OFFSETS = [0, 9]; // 시트에 니케가 좌/우 2열로 배치되어 있음 (A열, J열)
 // =================
 
-let headers = [], rows = [], sortCol = -1, sortAsc = true;
+const state = { list: [], imp: "", fav: false, q: "" };
 
-// gviz JSONP: CORS 문제 없이 공개 시트를 읽을 수 있음
+// gviz JSONP로 공개 시트 읽기 (CORS 영향 없음)
 function loadSheet() {
   return new Promise((resolve, reject) => {
-    const cb = "sheetCb_" + Date.now();
+    const cb = "nikkeCb_" + Date.now();
     const s = document.createElement("script");
     const timer = setTimeout(() => { cleanup(); reject(new Error("시간 초과")); }, 15000);
     function cleanup() { clearTimeout(timer); delete window[cb]; s.remove(); }
-    window[cb] = (resp) => {
+    window[cb] = resp => {
       cleanup();
       if (resp.status === "error") reject(new Error(resp.errors?.[0]?.detailed_message || "시트 오류"));
       else resolve(resp.table);
     };
-    s.onerror = () => { cleanup(); reject(new Error("시트에 접근할 수 없습니다. 공유 설정을 확인하세요.")); };
-    s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&headers=1&tqx=responseHandler:${cb}&_=${Date.now()}`;
+    s.onerror = () => { cleanup(); reject(new Error("시트에 접근할 수 없습니다")); };
+    s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&headers=0&tqx=responseHandler:${cb}&_=${Date.now()}`;
     document.body.appendChild(s);
   });
 }
 
-function cellText(c) {
-  if (!c) return "";
-  return c.f ?? (c.v == null ? "" : String(c.v));
-}
+const cell = c => (c && c.v != null ? String(c.f ?? c.v) : "").trim();
 
-function render() {
-  const q = document.getElementById("q").value.trim().toLowerCase();
-  let view = rows.filter(r => !q || r.some(v => v.toLowerCase().includes(q)));
-  if (sortCol >= 0) {
-    view = [...view].sort((a, b) => {
-      const x = a[sortCol], y = b[sortCol];
-      const nx = parseFloat(x.replace(/,/g, "")), ny = parseFloat(y.replace(/,/g, ""));
-      const cmp = !isNaN(nx) && !isNaN(ny) ? nx - ny : x.localeCompare(y, "ko");
-      return sortAsc ? cmp : -cmp;
+/*
+  시트 블록 구조 (니케 1명, 열 오프셋 off 기준):
+    [off+3] "스킬 레벨…"         ← 블록 시작
+    스킬 레벨 단계 값들           (예: 1/1/1, 7/7/7, 10/10/10)
+    [off+3] "오버로드"
+    오버로드 옵션 0~2줄           (왼쪽 위부터 우선순위)
+    [off+3] "큐브" …              (헤더)
+    [off+6] 비고                  (#태그, 오버로드 중요도, 메모)
+    [off]   이름, [off+3..4] 큐브, [off+5] 소장품   ← 블록 끝
+*/
+function parse(table) {
+  const rows = table.rows.map(r => table.cols.map((_, i) => cell(r.c[i])));
+  const intro = rows[0]?.[0] || "";
+  const found = [];
+
+  for (const off of BLOCK_OFFSETS) {
+    let cur = null, phase = null;
+    rows.forEach((r, ri) => {
+      const v = i => r[off + i] || "";
+      const span = [3, 4, 5, 6, 7].map(v).filter(Boolean);
+      const head = v(3);
+
+      if (head.startsWith("스킬")) { cur = { row: ri, off, skills: [], overload: [], note: "" }; phase = "skill"; return; }
+      if (!cur) return;
+      if (head === "오버로드") { phase = "ol"; return; }
+      if (head === "큐브" && v(5) === "소장품") { phase = "note"; return; }
+
+      if (v(0)) {
+        cur.rawName = v(0);
+        cur.cubes = [v(3), v(4)].filter(Boolean);
+        cur.coll = v(5);
+        found.push(cur);
+        cur = null; phase = null;
+        return;
+      }
+      if (phase === "skill") cur.skills.push(...span);
+      else if (phase === "ol" && span.length) {
+        // 시트상 칸 위치 유지: D·E열 → 1칸, F·G열 → 2칸, H열 → 3칸
+        const slots = ["", "", ""];
+        [3, 4, 5, 6, 7].forEach(i => { if (v(i)) slots[i < 5 ? 0 : i < 7 ? 1 : 2] = v(i); });
+        cur.overload.push(slots);
+      }
+      else if (phase === "note") cur.note = v(6);
     });
   }
 
-  document.getElementById("thead").innerHTML =
-    "<tr>" + headers.map((h, i) =>
-      `<th data-i="${i}">${esc(h)}<span class="arrow">${i === sortCol ? (sortAsc ? "▲" : "▼") : ""}</span></th>`
-    ).join("") + "</tr>";
-
-  document.getElementById("tbody").innerHTML = view.length
-    ? view.map(r => "<tr>" + r.map(v => `<td>${linkify(esc(v))}</td>`).join("") + "</tr>").join("")
-    : `<tr><td class="status" colspan="${headers.length || 1}">결과가 없습니다</td></tr>`;
+  // 시트 순서대로: 위 → 아래, 같은 줄이면 왼쪽 → 오른쪽
+  found.sort((a, b) => a.row - b.row || a.off - b.off);
+  return { intro, list: found.map(enrich) };
 }
 
-function esc(s) {
-  return s.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+function enrich(n, idx) {
+  let name = n.rawName.replace(/\s+/g, " ");
+  const fav = /\(애장품\)/.test(name);
+  name = name.replace(/\s*\(애장품\)\s*/, "");
+  const [main, ...rest] = name.split(/\s*:\s*/);
+  const tags = [], notes = [];
+  let imp = "";
+  for (const line of n.note.split("\n").map(s => s.trim()).filter(Boolean)) {
+    const m = line.match(/오버로드\s*중요도\s*:\s*(\S+)/);
+    if (m) { imp = m[1]; continue; }
+    if (line.startsWith("#")) {
+      line.split("#").map(s => s.trim()).filter(Boolean).forEach(t => tags.push(t));
+      continue;
+    }
+    notes.push(line);
+  }
+  const overload = n.overload.flat().map(o => {
+    if (!o) return null;
+    const m = o.match(/^(.*?)\s*([\d~\-]+)$/);
+    return m ? { stat: m[1], n: m[2] } : { stat: o, n: "" };
+  });
+  return {
+    idx: idx + 1, main, sub: rest.join(" : "), fav, imp, tags, notes,
+    skills: n.skills, overload, cubes: n.cubes, coll: n.coll,
+    text: [n.rawName, n.note, n.cubes.join(" "), n.overload.flat().join(" ")].join(" ").toLowerCase(),
+  };
 }
-function linkify(s) {
-  return s.replace(/https?:\/\/[^\s<]+/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+function card(n) {
+  const skills = n.skills.length
+    ? `<div class="skills">${n.skills.map(s => `<span class="lv">${esc(s)}</span>`).join('<span class="arrow">▶</span>')}</div>`
+    : `<span class="none">정보 없음</span>`;
+  const ol = n.overload.some(Boolean)
+    ? `<div class="ol">${n.overload.map(o => !o ? `<i></i>` : `<div title="${esc(o.stat)} ${esc(o.n)}"><span>${esc(o.stat)}</span>${o.n ? `<em>${esc(o.n)}</em>` : ""}</div>`).join("")}</div>`
+    : `<span class="none">오버로드 옵션 없음</span>`;
+  return `
+  <article class="card" data-imp="${esc(n.imp)}">
+    <div class="head">
+      <span class="no">${String(n.idx).padStart(3, "0")}</span>
+      <div class="names">
+        <div class="name">${esc(n.main)}</div>
+        ${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ""}
+      </div>
+      <div class="badges">
+        ${n.fav ? `<span class="badge fav">애장품</span>` : ""}
+        ${n.imp ? `<span class="badge imp">OL ${esc(n.imp)}</span>` : ""}
+      </div>
+    </div>
+    ${n.tags.length ? `<div class="tags">${n.tags.map(t => `<span class="tag">#${esc(t)}</span>`).join("")}</div>` : ""}
+    <div>
+      <div class="sec-title">Skill · 1스킬 / 2스킬 / 버스트</div>
+      ${skills}
+    </div>
+    <div>
+      <div class="sec-title">Overload</div>
+      ${ol}
+    </div>
+    <div class="gear">
+      <div>
+        <div class="sec-title">Cube</div>
+        <div class="cubes">${n.cubes.map(c => `<span class="cube">${esc(c)}</span>`).join("") || `<span class="none">-</span>`}</div>
+      </div>
+      <div>
+        <div class="sec-title">소장품</div>
+        <div class="coll">${esc(n.coll || "-")}</div>
+      </div>
+    </div>
+    ${n.notes.length ? `<ul class="notes">${n.notes.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+  </article>`;
+}
+
+function render() {
+  const q = state.q.trim().toLowerCase();
+  const view = state.list.filter(n =>
+    (!state.imp || n.imp === state.imp) &&
+    (!state.fav || n.fav) &&
+    (!q || n.text.includes(q))
+  );
+  document.getElementById("grid").innerHTML = view.length
+    ? view.map(card).join("")
+    : `<div class="empty">No match · 검색 결과가 없습니다</div>`;
+  document.getElementById("count").innerHTML = `<b>${view.length}</b> / ${state.list.length} NIKKE`;
+}
+
+function renderBrief(text) {
+  if (!text) return;
+  const html = text.split("\n").map(l => l.trim()).filter(Boolean)
+    .map(l => `<p class="${l.startsWith("※") ? "warn" : ""}">${esc(l)}</p>`).join("");
+  document.getElementById("briefBody").innerHTML = html;
+  document.getElementById("brief").hidden = false;
+}
+
+function setStatus(kind, msg) {
+  document.getElementById("dot").className = "dot " + kind;
+  document.getElementById("status").textContent = msg;
 }
 
 async function refresh() {
-  const meta = document.getElementById("meta");
+  setStatus("load", "Syncing…");
   try {
-    const table = await loadSheet();
-    headers = table.cols.map((c, i) => c.label || c.id || `열 ${i + 1}`);
-    rows = table.rows
-      .map(r => table.cols.map((_, i) => cellText(r.c[i])))
-      .filter(r => r.some(v => v !== ""));
-    // 빈 열 제거
-    const keep = headers.map((h, i) => h.trim() !== "" || rows.some(r => r[i] !== ""));
-    headers = headers.filter((_, i) => keep[i]);
-    rows = rows.map(r => r.filter((_, i) => keep[i]));
-    meta.textContent = `${rows.length}개 항목 · 마지막 갱신 ${new Date().toLocaleTimeString("ko-KR")}`;
+    const { intro, list } = parse(await loadSheet());
+    state.list = list;
+    renderBrief(intro);
     render();
+    setStatus("ok", "Synced " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
   } catch (e) {
-    meta.innerHTML = `<span class="error">불러오기 실패: ${esc(e.message)}</span>`;
+    setStatus("err", "Sync failed");
+    if (!state.list.length) document.getElementById("grid").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
   }
 }
 
-document.getElementById("q").addEventListener("input", render);
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
 document.getElementById("reload").addEventListener("click", refresh);
-document.getElementById("thead").addEventListener("click", e => {
-  const th = e.target.closest("th"); if (!th) return;
-  const i = +th.dataset.i;
-  sortAsc = sortCol === i ? !sortAsc : true;
-  sortCol = i;
+document.querySelectorAll("button[data-imp]").forEach(b => b.addEventListener("click", () => {
+  state.imp = b.dataset.imp;
+  document.querySelectorAll("button[data-imp]").forEach(x => x.classList.toggle("on", x === b));
+  render();
+}));
+document.getElementById("favToggle").addEventListener("click", e => {
+  state.fav = !state.fav;
+  e.currentTarget.classList.toggle("on", state.fav);
   render();
 });
 
 refresh();
-if (AUTO_REFRESH_SECONDS > 0) setInterval(refresh, AUTO_REFRESH_SECONDS * 1000);
 </script>
 </body>
 </html>
