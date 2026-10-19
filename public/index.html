@@ -33,6 +33,12 @@
     --st4: #ff4fd8;
     --display: "Rajdhani", "Noto Sans KR", sans-serif;
     --body: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+    /* 맨 위 Nebula 사이트 전환 바 색 (nebula.kim/switcher.js 가 읽음) */
+    --nebula-bar-bg: #06080c;
+    --nebula-bar-fg: #e6edf3;
+    --nebula-bar-muted: #7d8a99;
+    --nebula-bar-border: #1c2733;
+    --nebula-bar-active: #1c2733;
   }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
@@ -440,5 +446,7 @@ document.getElementById("favToggle").addEventListener("click", e => {
 
 refresh(false);
 </script>
+<!-- 맨 위 Nebula 사이트 전환 바 (사이트 목록은 nebula.kim/sites.json 한 곳에서 관리) -->
+<script src="https://nebula.kim/switcher.js" data-site="nikke" defer></script>
 </body>
 </html>
