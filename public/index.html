@@ -105,7 +105,6 @@
     --nebula-bar-border: #dbe1e8; --nebula-bar-active: #e8edf2;
     --header-top: rgba(255, 255, 255, .95); --header-bottom: rgba(246, 248, 251, .88);
     --grid-line: rgba(10, 147, 181, .05);
-    --co-strength: 70%; /* 기업 색 글자를 흰 배경에서 읽히게 살짝 진하게 */
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
@@ -120,7 +119,6 @@
       --nebula-bar-border: #dbe1e8; --nebula-bar-active: #e8edf2;
       --header-top: rgba(255, 255, 255, .95); --header-bottom: rgba(246, 248, 251, .88);
       --grid-line: rgba(10, 147, 181, .05);
-      --co-strength: 70%;
     }
   }
   * { box-sizing: border-box; }
@@ -228,15 +226,22 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   }
   .card {
-    position: relative; background: linear-gradient(160deg, var(--panel-2), var(--panel) 40%);
+    position: relative;
+    /* 기업 색(--co)을 카드 위쪽에 은은하게 깔아서 한눈에 구분되게 */
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--co, var(--dim)) 20%, transparent), transparent 110px),
+      linear-gradient(160deg, var(--panel-2), var(--panel) 40%);
     border: 1px solid var(--line);
+    border-top: 2px solid var(--co, var(--line));
     clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
     padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
     transition: border-color .15s, transform .15s;
   }
-  .card:hover { border-color: var(--line-hi); transform: translateY(-2px); }
+  .card:hover { border-color: color-mix(in srgb, var(--co, var(--line-hi)) 55%, var(--line)); transform: translateY(-2px); }
+  /* 왼쪽 기업 색 띠 (위는 진하고 아래로 갈수록 옅어짐) */
   .card::before {
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--co, var(--dim));
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: linear-gradient(180deg, var(--co, var(--dim)), color-mix(in srgb, var(--co, var(--dim)) 25%, transparent));
   }
   .card[data-co="엘리시온"] { --co: #4f8dff; }
   .card[data-co="미실리스"] { --co: #ffb547; }
@@ -247,7 +252,7 @@
   .head { display: flex; gap: 12px; align-items: center; }
   .portrait {
     width: 64px; height: 64px; flex-shrink: 0; background: var(--well);
-    border: 1px solid var(--line-hi); position: relative; overflow: hidden;
+    border: 2px solid color-mix(in srgb, var(--co, var(--line-hi)) 70%, transparent); position: relative; overflow: hidden;
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   }
   .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
@@ -264,7 +269,7 @@
     font-size: 11px; line-height: 1; padding: 4px 7px; color: var(--muted);
     border: 1px solid var(--line-hi); background: var(--well);
   }
-  .pill.co { color: color-mix(in srgb, var(--co) var(--co-strength, 100%), var(--text)); border-color: color-mix(in srgb, var(--co) 45%, transparent); }
+  .pill.co { color: #0d1117; background: var(--co); border-color: var(--co); font-weight: 700; } /* 기업 이름은 색을 꽉 채운 배지로 */
   .pill.mode { font: 700 11px/1 var(--display); letter-spacing: .1em; }
   .pill.pve { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
   .pill.pvp { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
