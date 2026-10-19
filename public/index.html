@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NIKKE · SSR 세팅 가이드</title>
-<meta name="description" content="SSR 니케 캐릭터별 스킬·오버로드·큐브·소장품 세팅 가이드">
+<title>NIKKE · 육성 가이드</title>
+<meta name="description" content="승리의 여신: 니케 캐릭터별 스킬·오버로드·큐브·소장품 육성 가이드">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
     --bg: #06080c;
     --panel: #0c1118;
     --panel-2: #111823;
+    --well: #0a0f15;
     --line: #1c2733;
     --line-hi: #2c3b4b;
     --text: #e6edf3;
@@ -24,6 +25,12 @@
     --cyan: #3ad7f5;
     --cyan-soft: rgba(58, 215, 245, .12);
     --green: #55e39a;
+    --pink: #ff6fd8;
+    /* 스킬 빌드업 단계 색 (시트: 검정 → 하늘 → 주황 → 자홍) */
+    --st1: #c9d1d9;
+    --st2: #3ad7f5;
+    --st3: #ff9b3d;
+    --st4: #ff4fd8;
     --display: "Rajdhani", "Noto Sans KR", sans-serif;
     --body: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
   }
@@ -39,7 +46,6 @@
     background-attachment: fixed;
     min-height: 100vh;
   }
-  a { color: var(--cyan); }
 
   /* ---------- header ---------- */
   header {
@@ -89,17 +95,14 @@
   .brief summary::-webkit-details-marker { display: none; }
   .brief summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 18px; }
   .brief[open] summary::after { content: "−"; }
-  .brief-body { padding: 0 18px 16px; color: #c3ccd6; white-space: pre-line; font-size: 13px; }
+  .brief-body { padding: 0 18px 16px; color: #c3ccd6; font-size: 13px; }
   .brief-body p { margin: 0 0 6px; }
-  .brief-body .warn { color: var(--amber); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
 
   /* ---------- controls ---------- */
-  .controls {
-    display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-bottom: 14px;
-  }
-  .search {
-    position: relative;
-  }
+  .controls { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-bottom: 14px; }
+  .search { position: relative; }
   .search input {
     width: 100%; padding: 12px 14px 12px 40px; font: inherit; color: var(--text);
     background: var(--panel); border: 1px solid var(--line); border-radius: 0;
@@ -114,96 +117,117 @@
   }
   .btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
-  .filters .label {
+  .filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .frow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .frow .label {
     font: 600 11px/1 var(--display); letter-spacing: .2em; color: var(--muted);
-    text-transform: uppercase; margin-right: 4px;
+    text-transform: uppercase; width: 56px; flex-shrink: 0;
   }
   .chip {
-    font: 500 12px/1 var(--body); padding: 7px 12px; cursor: pointer;
+    font: 500 12px/1 var(--body); padding: 7px 11px; cursor: pointer;
     color: var(--muted); background: transparent; border: 1px solid var(--line-hi);
     transition: all .15s;
   }
   .chip:hover { color: var(--text); }
   .chip.on { color: var(--bg); background: var(--cyan); border-color: var(--cyan); font-weight: 700; }
-  .sep { width: 1px; height: 18px; background: var(--line-hi); margin: 0 6px; }
   .count { margin-left: auto; font: 600 13px/1 var(--display); letter-spacing: .12em; color: var(--muted); }
   .count b { color: var(--text); font-size: 16px; }
 
   /* ---------- grid ---------- */
   .grid {
     display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   }
   .card {
     position: relative; background: linear-gradient(160deg, var(--panel-2), var(--panel) 40%);
     border: 1px solid var(--line);
     clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
-    padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
     transition: border-color .15s, transform .15s;
   }
   .card:hover { border-color: var(--line-hi); transform: translateY(-2px); }
   .card::before {
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-    background: var(--imp, var(--dim));
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--co, var(--dim));
   }
-  .card[data-imp="높음"] { --imp: var(--accent); }
-  .card[data-imp="보통"] { --imp: var(--amber); }
-  .card[data-imp="낮음"] { --imp: var(--cyan); }
-  .card[data-imp="X"] { --imp: var(--dim); }
+  .card[data-co="엘리시온"] { --co: #4f8dff; }
+  .card[data-co="미실리스"] { --co: #ffb547; }
+  .card[data-co="테트라"] { --co: #ff6fd8; }
+  .card[data-co="필그림"] { --co: #55e39a; }
+  .card[data-co="어브노멀"] { --co: #ff4655; }
 
-  .head { display: flex; gap: 12px; align-items: flex-start; }
-  .no {
-    font: 700 11px/1 var(--display); letter-spacing: .1em; color: var(--dim);
-    padding-top: 4px; min-width: 26px;
+  .head { display: flex; gap: 12px; align-items: center; }
+  .portrait {
+    width: 64px; height: 64px; flex-shrink: 0; background: var(--well);
+    border: 1px solid var(--line-hi); position: relative; overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .portrait::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgba(6, 8, 12, .5));
   }
   .names { flex: 1; min-width: 0; }
   .name { font-size: 18px; font-weight: 700; line-height: 1.25; }
-  .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-  .badge {
-    font: 700 11px/1 var(--display); letter-spacing: .12em; padding: 5px 8px;
-    border: 1px solid currentColor; white-space: nowrap; text-transform: uppercase;
+  .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .pill {
+    font-size: 11px; line-height: 1; padding: 4px 7px; color: var(--muted);
+    border: 1px solid var(--line-hi); background: var(--well);
   }
-  .badge.imp { color: var(--imp, var(--dim)); }
-  .badge.fav { color: #ff8bd1; }
-
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag { font-size: 12px; color: var(--cyan); background: var(--cyan-soft); padding: 3px 8px; }
+  .pill.co { color: var(--co); border-color: color-mix(in srgb, var(--co) 45%, transparent); }
+  .pill.mode { font: 700 11px/1 var(--display); letter-spacing: .1em; }
+  .pill.pve { color: var(--green); border-color: rgba(85, 227, 154, .4); }
+  .pill.pvp { color: var(--accent); border-color: rgba(255, 70, 85, .4); }
+  .pill.fav { color: var(--pink); border-color: rgba(255, 111, 216, .45); }
 
   .sec-title {
     font: 600 11px/1 var(--display); letter-spacing: .22em; color: var(--muted);
     text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 8px;
   }
   .sec-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .sec-title small { letter-spacing: .05em; text-transform: none; font: 400 11px/1 var(--body); color: var(--dim); }
 
-  .skills { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .skills { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
   .lv {
-    font: 700 15px/1 var(--display); letter-spacing: .06em; padding: 7px 10px;
-    background: #0a0f15; border: 1px solid var(--line-hi); white-space: nowrap;
+    position: relative; padding: 8px 4px 6px; text-align: center; background: var(--well);
+    border: 1px solid var(--line); font: 700 14px/1 var(--display); letter-spacing: .04em;
+    white-space: nowrap; color: var(--st);
   }
-  .lv:last-child { border-color: var(--accent); color: #fff; box-shadow: inset 0 0 12px var(--accent-soft); }
-  .arrow { color: var(--dim); font-size: 12px; }
+  .lv::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 2px; background: var(--st); }
+  .lv:nth-child(1) { --st: var(--st1); }
+  .lv:nth-child(2) { --st: var(--st2); }
+  .lv:nth-child(3) { --st: var(--st3); }
+  .lv:nth-child(4) { --st: var(--st4); }
+  .lv span { color: var(--dim); font-weight: 500; margin: 0 1px; }
 
   .ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-  .ol div {
-    font-size: 12px; padding: 6px 8px; background: #0a0f15; border: 1px solid var(--line);
-    display: flex; justify-content: space-between; gap: 6px; align-items: center; min-width: 0;
+  .ol > div {
+    font-size: 12px; padding: 6px 8px 6px 24px; background: var(--well); border: 1px solid var(--line);
+    position: relative; min-width: 0;
   }
-  .ol div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ol div em { font: 700 13px/1 var(--display); font-style: normal; color: var(--amber); }
-  .ol div:first-child { border-color: rgba(255, 181, 71, .45); }
+  .ol > div::before {
+    content: attr(data-n); position: absolute; left: 7px; top: 7px;
+    font: 700 11px/1 var(--display); color: var(--amber);
+  }
+  .ol > div:first-child { border-color: rgba(255, 181, 71, .45); }
+  .ol .hint { display: block; font-size: 11px; color: var(--muted); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 12px; padding: 4px 8px; background: var(--well); border: 1px solid var(--line-hi); }
+  .tag.cube:first-child { border-color: var(--cyan); color: var(--cyan); }
+  .tag.opt { color: #c3ccd6; }
+  .tag.use { color: var(--cyan); background: var(--cyan-soft); border-color: transparent; }
 
   .gear { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
-  .cubes { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cube { font-size: 12px; padding: 5px 9px; border: 1px solid var(--line-hi); background: #0a0f15; }
-  .cube:first-child { border-color: var(--cyan); color: var(--cyan); }
-  .coll { font: 700 15px/1 var(--display); letter-spacing: .08em; padding: 6px 10px; border: 1px solid var(--line-hi); text-align: center; }
+  .coll { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+  .coll span {
+    font: 700 14px/1 var(--display); letter-spacing: .06em; padding: 6px 10px;
+    border: 1px solid var(--line-hi); text-align: center; white-space: nowrap;
+  }
+  .coll span.alt { font-size: 12px; color: var(--muted); border-style: dashed; }
 
-  .notes { margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: #b9c3ce; }
-  .notes li { padding-left: 14px; position: relative; }
-  .notes li::before { content: "›"; position: absolute; left: 2px; color: var(--accent); }
-
+  .notes { margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--amber); }
+  .notes li { padding-left: 2px; }
   .none { color: var(--dim); font-size: 12px; }
 
   .empty, .loading {
@@ -218,211 +242,131 @@
   footer { text-align: center; color: var(--dim); font-size: 12px; padding: 0 16px 32px; }
 
   @media (max-width: 560px) {
-    .bar { padding: 12px 16px; }
     .logo b { font-size: 22px; }
     .status-line { width: 100%; }
-    .count { width: 100%; margin: 6px 0 0; }
-    .sep { display: none; }
+    .frow .label { width: 100%; }
+    .count { width: 100%; margin: 4px 0 0; }
   }
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
-    <div class="logo"><b>NIKKE</b><span>SSR Setting Guide</span></div>
+    <div class="logo"><b>NIKKE</b><span>Build Guide</span></div>
     <div class="status-line"><i class="dot load" id="dot"></i><span id="status">Syncing…</span></div>
   </div>
 </header>
 
 <main>
   <details class="brief" id="brief" hidden>
-    <summary>Briefing · 세팅 가이드 안내</summary>
-    <div class="brief-body" id="briefBody"></div>
+    <summary>Briefing · 육성 가이드 안내</summary>
+    <div class="brief-body">
+      <div id="briefBody"></div>
+      <div class="legend">
+        <span><i style="background:var(--st1)"></i>1단계</span>
+        <span><i style="background:var(--st2)"></i>2단계</span>
+        <span><i style="background:var(--st3)"></i>3단계</span>
+        <span><i style="background:var(--st4)"></i>4단계</span>
+        <span>· 스킬 표기: 1스킬 / 2스킬 / 버스트</span>
+      </div>
+    </div>
   </details>
 
   <div class="controls">
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" id="q" placeholder="니케 이름, 태그, 비고 검색" autocomplete="off">
+      <input type="search" id="q" placeholder="니케 이름, 큐브, 옵션, 메모 검색" autocomplete="off">
     </label>
     <button class="btn" id="reload">Sync</button>
   </div>
 
-  <div class="filters" id="filters">
-    <span class="label">오버로드</span>
-    <button class="chip on" data-imp="">전체</button>
-    <button class="chip" data-imp="높음">높음</button>
-    <button class="chip" data-imp="보통">보통</button>
-    <button class="chip" data-imp="낮음">낮음</button>
-    <button class="chip" data-imp="X">X</button>
-    <span class="sep"></span>
-    <button class="chip" id="favToggle">애장품만</button>
-    <span class="count" id="count"></span>
+  <div class="filters">
+    <div class="frow" data-key="company"><span class="label">기업</span></div>
+    <div class="frow" data-key="weapon"><span class="label">무기</span></div>
+    <div class="frow" data-key="mode"><span class="label">사용처</span></div>
+    <div class="frow">
+      <span class="label">기타</span>
+      <button class="chip" id="favToggle">애장품</button>
+      <span class="count" id="count"></span>
+    </div>
   </div>
 
   <div class="grid" id="grid"><div class="loading">Loading data</div></div>
 </main>
 
-<footer>데이터 출처: SSR 니케 육성 스프레드시트 · 시트가 수정되면 자동으로 반영됩니다</footer>
+<footer>데이터 출처: [승리의 여신 : 니케] 육성 시트 · 시트가 수정되면 몇 분 안에 자동 반영됩니다</footer>
 
 <script>
-// ===== 설정 =====
-const SHEET_ID = "1IvaV9_REBew6dSri571JopqcBbJ5QL2tToWglHhIMH4";
-const GID = "2810458";       // "SSR 캐릭터 별 세팅" 탭
-const BLOCK_OFFSETS = [0, 9]; // 시트에 니케가 좌/우 2열로 배치되어 있음 (A열, J열)
-// =================
+const state = { list: [], q: "", fav: false, company: "", weapon: "", mode: "" };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
-const state = { list: [], imp: "", fav: false, q: "" };
-
-// gviz JSONP로 공개 시트 읽기 (CORS 영향 없음)
-function loadSheet() {
-  return new Promise((resolve, reject) => {
-    const cb = "nikkeCb_" + Date.now();
-    const s = document.createElement("script");
-    const timer = setTimeout(() => { cleanup(); reject(new Error("시간 초과")); }, 15000);
-    function cleanup() { clearTimeout(timer); delete window[cb]; s.remove(); }
-    window[cb] = resp => {
-      cleanup();
-      if (resp.status === "error") reject(new Error(resp.errors?.[0]?.detailed_message || "시트 오류"));
-      else resolve(resp.table);
-    };
-    s.onerror = () => { cleanup(); reject(new Error("시트에 접근할 수 없습니다")); };
-    s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&headers=0&tqx=responseHandler:${cb}&_=${Date.now()}`;
-    document.body.appendChild(s);
-  });
+async function load(fresh) {
+  const res = await fetch("/api/data" + (fresh ? "?fresh=1" : ""));
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || "데이터를 불러오지 못했습니다");
+  return data;
 }
-
-const cell = c => (c && c.v != null ? String(c.f ?? c.v) : "").trim();
-
-/*
-  시트 블록 구조 (니케 1명, 열 오프셋 off 기준):
-    [off+3] "스킬 레벨…"         ← 블록 시작
-    스킬 레벨 단계 값들           (예: 1/1/1, 7/7/7, 10/10/10)
-    [off+3] "오버로드"
-    오버로드 옵션 0~2줄           (왼쪽 위부터 우선순위)
-    [off+3] "큐브" …              (헤더)
-    [off+6] 비고                  (#태그, 오버로드 중요도, 메모)
-    [off]   이름, [off+3..4] 큐브, [off+5] 소장품   ← 블록 끝
-*/
-function parse(table) {
-  const rows = table.rows.map(r => table.cols.map((_, i) => cell(r.c[i])));
-  const intro = rows[0]?.[0] || "";
-  const found = [];
-
-  for (const off of BLOCK_OFFSETS) {
-    let cur = null, phase = null;
-    rows.forEach((r, ri) => {
-      const v = i => r[off + i] || "";
-      const span = [3, 4, 5, 6, 7].map(v).filter(Boolean);
-      const head = v(3);
-
-      if (head.startsWith("스킬")) { cur = { row: ri, off, skills: [], overload: [], note: "" }; phase = "skill"; return; }
-      if (!cur) return;
-      if (head === "오버로드") { phase = "ol"; return; }
-      if (head === "큐브" && v(5) === "소장품") { phase = "note"; return; }
-
-      if (v(0)) {
-        cur.rawName = v(0);
-        cur.cubes = [v(3), v(4)].filter(Boolean);
-        cur.coll = v(5);
-        found.push(cur);
-        cur = null; phase = null;
-        return;
-      }
-      if (phase === "skill") cur.skills.push(...span);
-      else if (phase === "ol" && span.length) {
-        // 시트상 칸 위치 유지: D·E열 → 1칸, F·G열 → 2칸, H열 → 3칸
-        const slots = ["", "", ""];
-        [3, 4, 5, 6, 7].forEach(i => { if (v(i)) slots[i < 5 ? 0 : i < 7 ? 1 : 2] = v(i); });
-        cur.overload.push(slots);
-      }
-      else if (phase === "note") cur.note = v(6);
-    });
-  }
-
-  // 시트 순서대로: 위 → 아래, 같은 줄이면 왼쪽 → 오른쪽
-  found.sort((a, b) => a.row - b.row || a.off - b.off);
-  return { intro, list: found.map(enrich) };
-}
-
-function enrich(n, idx) {
-  let name = n.rawName.replace(/\s+/g, " ");
-  const fav = /\(애장품\)/.test(name);
-  name = name.replace(/\s*\(애장품\)\s*/, "");
-  const [main, ...rest] = name.split(/\s*:\s*/);
-  const tags = [], notes = [];
-  let imp = "";
-  for (const line of n.note.split("\n").map(s => s.trim()).filter(Boolean)) {
-    const m = line.match(/오버로드\s*중요도\s*:\s*(\S+)/);
-    if (m) { imp = m[1]; continue; }
-    if (line.startsWith("#")) {
-      line.split("#").map(s => s.trim()).filter(Boolean).forEach(t => tags.push(t));
-      continue;
-    }
-    notes.push(line);
-  }
-  const overload = n.overload.flat().map(o => {
-    if (!o) return null;
-    const m = o.match(/^(.*?)\s*([\d~\-]+)$/);
-    return m ? { stat: m[1], n: m[2] } : { stat: o, n: "" };
-  });
-  return {
-    idx: idx + 1, main, sub: rest.join(" : "), fav, imp, tags, notes,
-    skills: n.skills, overload, cubes: n.cubes, coll: n.coll,
-    text: [n.rawName, n.note, n.cubes.join(" "), n.overload.flat().join(" ")].join(" ").toLowerCase(),
-  };
-}
-
-const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
 function card(n) {
-  const skills = n.skills.length
-    ? `<div class="skills">${n.skills.map(s => `<span class="lv">${esc(s)}</span>`).join('<span class="arrow">▶</span>')}</div>`
+  const skills = n.skills.some(s => s.some(Boolean))
+    ? `<div class="skills">${n.skills.map(s => `<div class="lv">${s.map(v => esc(v || "-")).join("<span>/</span>")}</div>`).join("")}</div>`
     : `<span class="none">정보 없음</span>`;
-  const ol = n.overload.some(Boolean)
-    ? `<div class="ol">${n.overload.map(o => !o ? `<i></i>` : `<div title="${esc(o.stat)} ${esc(o.n)}"><span>${esc(o.stat)}</span>${o.n ? `<em>${esc(o.n)}</em>` : ""}</div>`).join("")}</div>`
-    : `<span class="none">오버로드 옵션 없음</span>`;
+  const ol = n.overload.length
+    ? `<div class="ol">${n.overload.map((o, i) =>
+        `<div data-n="${i + 1}">${esc(o[0])}${o.slice(1).map(h => `<span class="hint">${esc(h)}</span>`).join("")}</div>`).join("")}</div>`
+    : `<span class="none">-</span>`;
+  const coll = n.coll.length
+    ? n.coll.map(c => `<span class="${/^\(.*\)$/.test(c) ? "alt" : ""}">${esc(c)}</span>`).join("")
+    : `<span>-</span>`;
   return `
-  <article class="card" data-imp="${esc(n.imp)}">
+  <article class="card" data-co="${esc(n.company)}">
     <div class="head">
-      <span class="no">${String(n.idx).padStart(3, "0")}</span>
+      <div class="portrait">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</div>
       <div class="names">
-        <div class="name">${esc(n.main)}</div>
+        <div class="name">${esc(n.name)}</div>
         ${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ""}
-      </div>
-      <div class="badges">
-        ${n.fav ? `<span class="badge fav">애장품</span>` : ""}
-        ${n.imp ? `<span class="badge imp">OL ${esc(n.imp)}</span>` : ""}
+        <div class="meta">
+          <span class="pill co">${esc(n.company)}</span>
+          <span class="pill">${esc(n.weapon)}</span>
+          ${n.modes.map(m => `<span class="pill mode ${m.toLowerCase()}">${m}</span>`).join("")}
+          ${n.favorite ? `<span class="pill fav">애장품${n.favPriority ? " · " + esc(n.favPriority) : ""}</span>` : ""}
+        </div>
       </div>
     </div>
-    ${n.tags.length ? `<div class="tags">${n.tags.map(t => `<span class="tag">#${esc(t)}</span>`).join("")}</div>` : ""}
+    ${n.usage.length ? `<div class="chips">${n.usage.map(u => `<span class="tag use">${esc(u)}</span>`).join("")}</div>` : ""}
     <div>
-      <div class="sec-title">Skill · 1스킬 / 2스킬 / 버스트</div>
+      <div class="sec-title">Skill <small>1스킬 / 2스킬 / 버스트 · 빌드업 순서</small></div>
       ${skills}
     </div>
     <div>
-      <div class="sec-title">Overload</div>
+      <div class="sec-title">Overload <small>우선순위 · ( )는 최소~권장 줄 수</small></div>
       ${ol}
     </div>
+    ${n.extra.length ? `<div>
+      <div class="sec-title">유효 추가 옵션</div>
+      <div class="chips">${n.extra.map(x => `<span class="tag opt">${esc(x)}</span>`).join("")}</div>
+    </div>` : ""}
     <div class="gear">
       <div>
         <div class="sec-title">Cube</div>
-        <div class="cubes">${n.cubes.map(c => `<span class="cube">${esc(c)}</span>`).join("") || `<span class="none">-</span>`}</div>
+        <div class="chips">${n.cube.map(c => `<span class="tag cube">${esc(c)}</span>`).join("") || `<span class="none">-</span>`}</div>
       </div>
       <div>
-        <div class="sec-title">소장품</div>
-        <div class="coll">${esc(n.coll || "-")}</div>
+        <div class="sec-title">${n.favorite ? "애장품" : "소장품"}</div>
+        <div class="coll">${coll}</div>
       </div>
     </div>
-    ${n.notes.length ? `<ul class="notes">${n.notes.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+    ${n.footnotes.length ? `<ul class="notes">${n.footnotes.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
   </article>`;
 }
 
 function render() {
   const q = state.q.trim().toLowerCase();
   const view = state.list.filter(n =>
-    (!state.imp || n.imp === state.imp) &&
-    (!state.fav || n.fav) &&
+    (!state.company || n.company === state.company) &&
+    (!state.weapon || n.weapon === state.weapon) &&
+    (!state.mode || n.modes.includes(state.mode)) &&
+    (!state.fav || n.favorite) &&
     (!q || n.text.includes(q))
   );
   document.getElementById("grid").innerHTML = view.length
@@ -431,11 +375,33 @@ function render() {
   document.getElementById("count").innerHTML = `<b>${view.length}</b> / ${state.list.length} NIKKE`;
 }
 
-function renderBrief(text) {
-  if (!text) return;
-  const html = text.split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => `<p class="${l.startsWith("※") ? "warn" : ""}">${esc(l)}</p>`).join("");
-  document.getElementById("briefBody").innerHTML = html;
+function buildFilters() {
+  const opts = {
+    company: [...new Set(state.list.map(n => n.company))],
+    weapon: [...new Set(state.list.map(n => n.weapon))],
+    mode: ["PVE", "PVP"],
+  };
+  document.querySelectorAll(".frow[data-key]").forEach(row => {
+    const key = row.dataset.key;
+    row.querySelectorAll("button").forEach(b => b.remove());
+    ["", ...opts[key]].forEach(v => {
+      const b = document.createElement("button");
+      b.className = "chip" + (state[key] === v ? " on" : "");
+      b.textContent = v || "전체";
+      b.onclick = () => {
+        state[key] = v;
+        row.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        render();
+      };
+      row.appendChild(b);
+    });
+  });
+}
+
+function renderBrief(intro) {
+  const body = intro.slice(1).join("\n").split("\n").map(l => l.trim()).filter(Boolean);
+  if (!body.length) return;
+  document.getElementById("briefBody").innerHTML = body.map(l => `<p>${esc(l)}</p>`).join("");
   document.getElementById("brief").hidden = false;
 }
 
@@ -444,14 +410,20 @@ function setStatus(kind, msg) {
   document.getElementById("status").textContent = msg;
 }
 
-async function refresh() {
+async function refresh(fresh) {
   setStatus("load", "Syncing…");
   try {
-    const { intro, list } = parse(await loadSheet());
-    state.list = list;
-    renderBrief(intro);
+    const data = await load(fresh);
+    state.list = data.list.map(n => ({
+      ...n,
+      text: [n.name, n.sub, n.company, n.weapon, ...n.cube, ...n.extra, ...n.usage, ...n.overload.flat(), ...n.footnotes]
+        .join(" ").toLowerCase(),
+    }));
+    renderBrief(data.intro);
+    buildFilters();
     render();
-    setStatus("ok", "Synced " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    const t = new Date(data.updated).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    setStatus("ok", "Synced " + t);
   } catch (e) {
     setStatus("err", "Sync failed");
     if (!state.list.length) document.getElementById("grid").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
@@ -459,19 +431,14 @@ async function refresh() {
 }
 
 document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
-document.getElementById("reload").addEventListener("click", refresh);
-document.querySelectorAll("button[data-imp]").forEach(b => b.addEventListener("click", () => {
-  state.imp = b.dataset.imp;
-  document.querySelectorAll("button[data-imp]").forEach(x => x.classList.toggle("on", x === b));
-  render();
-}));
+document.getElementById("reload").addEventListener("click", () => refresh(true));
 document.getElementById("favToggle").addEventListener("click", e => {
   state.fav = !state.fav;
   e.currentTarget.classList.toggle("on", state.fav);
   render();
 });
 
-refresh();
+refresh(false);
 </script>
 </body>
 </html>
