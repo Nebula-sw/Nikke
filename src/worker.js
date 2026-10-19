@@ -52,11 +52,13 @@ const IMG_PREFIX = "https://docs.google.com/sheets-images-rt/";
 async function handleImage(request, ctx, src) {
   if (!src.startsWith(IMG_PREFIX)) return new Response("bad image url", { status: 400 });
   const cache = caches.default;
-  const key = new Request(request.url);
+  // 캐시 이름은 원본 주소 기준 (화면이 재시도할 때 붙이는 &r=1 같은 값은 무시)
+  const key = new Request(new URL("/api/img?u=" + encodeURIComponent(src), request.url).toString());
   const hit = await cache.match(key);
   if (hit) return hit;
-  const upstream = await fetch(src);
-  if (!upstream.ok) return new Response("image fetch failed", { status: 502 });
+  const upstream = await fetchWithRetry(src);
+  // 실패 응답은 브라우저가 저장하지 않게 (다음에 다시 시도할 수 있도록)
+  if (!upstream) return new Response("image fetch failed", { status: 502, headers: { "cache-control": "no-store" } });
   const res = new Response(upstream.body, {
     headers: {
       "content-type": upstream.headers.get("content-type") || "image/png",
@@ -65,6 +67,18 @@ async function handleImage(request, ctx, src) {
   });
   ctx.waitUntil(cache.put(key, res.clone()));
   return res;
+}
+
+// 구글이 한꺼번에 들어오는 이미지 요청 일부를 잠깐 거절(429 등)할 때가 있어서, 조금씩 기다리며 최대 3번 시도
+async function fetchWithRetry(src, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(src, { headers: { "user-agent": "Mozilla/5.0 nikke.nebula.kim" } });
+      if (res.ok) return res;
+    } catch {}
+    if (i < tries - 1) await new Promise(r => setTimeout(r, 400 * (i + 1) + Math.random() * 300));
+  }
+  return null;
 }
 
 export async function buildData(fetchText = defaultFetchText) {

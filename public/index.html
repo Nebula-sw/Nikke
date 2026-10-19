@@ -5,6 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NIKKE · 육성 가이드</title>
 <meta name="description" content="승리의 여신: 니케 캐릭터별 스킬·오버로드·큐브·소장품 육성 가이드">
+<script>
+  // 저장된 화면 모드·색 테마를 그리기 전에 적용 (깜빡임 방지)
+  // 바꾸는 화면은 맨 위 Nebula 바의 [테마] 버튼(nebula.kim/switcher.js). 저장 이름 'theme'·'palette'는 그쪽과 약속된 값
+  try {
+    const t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    const p = localStorage.getItem('palette');
+    if (p) document.documentElement.dataset.palette = p;
+  } catch {}
+  // 바의 [테마] 창에 보여줄 이 사이트의 색 테마 목록 (아래 CSS의 [data-palette=...] 와 id가 같아야 함)
+  window.nebulaTheme = {
+    defaultPalette: "red",
+    palettes: [
+      { id: "red", name: "레드", color: "#ff4655" },
+      { id: "orange", name: "오렌지", color: "#ff8a3d" },
+      { id: "pink", name: "핑크", color: "#ff5fa8" },
+      { id: "violet", name: "바이올렛", color: "#a77bff" },
+      { id: "blue", name: "블루", color: "#4f8dff" },
+      { id: "mint", name: "민트", color: "#2fd3a5" },
+    ],
+  };
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -19,8 +41,12 @@
     --text: #e6edf3;
     --muted: #7d8a99;
     --dim: #4a5664;
-    --accent: #ff4655;
-    --accent-soft: rgba(255, 70, 85, .14);
+    /* 포인트 색: 색 테마(--acc-dark/--acc-light, 아래 [data-palette])에서 모드에 맞는 쪽을 씀 */
+    --acc-dark: #ff4655;
+    --acc-light: #e5323f;
+    --accent: var(--acc-dark);
+    --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+    --text-2: #c3ccd6; /* 본문보다 살짝 흐린 글자 */
     --amber: #ffb547;
     --cyan: #3ad7f5;
     --cyan-soft: rgba(58, 215, 245, .12);
@@ -39,15 +65,60 @@
     --nebula-bar-muted: #7d8a99;
     --nebula-bar-border: #1c2733;
     --nebula-bar-active: #1c2733;
+    --nebula-bar-panel: var(--panel);
+    --nebula-bar-accent: var(--accent);
+    --header-top: rgba(12, 17, 24, .95);
+    --header-bottom: rgba(6, 8, 12, .85);
+    --grid-line: rgba(58, 215, 245, .035);
+  }
+
+  /* ---------- 색 테마 (맨 위 바에서 고름) ---------- */
+  [data-palette="orange"] { --acc-dark: #ff8a3d; --acc-light: #d9601a; }
+  [data-palette="pink"]   { --acc-dark: #ff5fa8; --acc-light: #d83384; }
+  [data-palette="violet"] { --acc-dark: #a77bff; --acc-light: #7a4fe6; }
+  [data-palette="blue"]   { --acc-dark: #4f8dff; --acc-light: #2b67dc; }
+  [data-palette="mint"]   { --acc-dark: #2fd3a5; --acc-light: #0d9a74; }
+
+  /* ---------- 라이트 모드 ----------
+     바에서 '라이트'를 골랐을 때 + '시스템'인데 기기가 라이트일 때. 두 블록 내용은 같게 유지 */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #eef1f5; --panel: #ffffff; --panel-2: #f6f8fb; --well: #f1f4f8;
+    --line: #dbe1e8; --line-hi: #c3ccd6;
+    --text: #121820; --text-2: #3d4856; --muted: #5b6878; --dim: #8a96a4;
+    --accent: var(--acc-light);
+    --amber: #c27c00; --cyan: #0a93b5; --cyan-soft: rgba(10, 147, 181, .1); --green: #12985a; --pink: #c93a9f;
+    --st1: #5b6878; --st2: #0a93b5; --st3: #d9711a; --st4: #c42fa6;
+    --nebula-bar-bg: #ffffff; --nebula-bar-fg: #121820; --nebula-bar-muted: #5b6878;
+    --nebula-bar-border: #dbe1e8; --nebula-bar-active: #e8edf2;
+    --header-top: rgba(255, 255, 255, .95); --header-bottom: rgba(246, 248, 251, .88);
+    --grid-line: rgba(10, 147, 181, .05);
+    --co-strength: 70%; /* 기업 색 글자를 흰 배경에서 읽히게 살짝 진하게 */
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --bg: #eef1f5; --panel: #ffffff; --panel-2: #f6f8fb; --well: #f1f4f8;
+      --line: #dbe1e8; --line-hi: #c3ccd6;
+      --text: #121820; --text-2: #3d4856; --muted: #5b6878; --dim: #8a96a4;
+      --accent: var(--acc-light);
+      --amber: #c27c00; --cyan: #0a93b5; --cyan-soft: rgba(10, 147, 181, .1); --green: #12985a; --pink: #c93a9f;
+      --st1: #5b6878; --st2: #0a93b5; --st3: #d9711a; --st4: #c42fa6;
+      --nebula-bar-bg: #ffffff; --nebula-bar-fg: #121820; --nebula-bar-muted: #5b6878;
+      --nebula-bar-border: #dbe1e8; --nebula-bar-active: #e8edf2;
+      --header-top: rgba(255, 255, 255, .95); --header-bottom: rgba(246, 248, 251, .88);
+      --grid-line: rgba(10, 147, 181, .05);
+      --co-strength: 70%;
+    }
   }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
   body {
     margin: 0; color: var(--text); font: 14px/1.55 var(--body);
     background:
-      linear-gradient(rgba(58, 215, 245, .035) 1px, transparent 1px) 0 0 / 100% 32px,
-      linear-gradient(90deg, rgba(58, 215, 245, .035) 1px, transparent 1px) 0 0 / 32px 100%,
-      radial-gradient(1200px 600px at 85% -10%, rgba(255, 70, 85, .12), transparent 60%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 100% 32px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 32px 100%,
+      radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
       var(--bg);
     background-attachment: fixed;
     min-height: 100vh;
@@ -56,7 +127,7 @@
   /* ---------- header ---------- */
   header {
     border-bottom: 1px solid var(--line);
-    background: linear-gradient(180deg, rgba(12, 17, 24, .95), rgba(6, 8, 12, .85));
+    background: linear-gradient(180deg, var(--header-top), var(--header-bottom));
     backdrop-filter: blur(6px);
     position: sticky; top: 0; z-index: 10;
   }
@@ -67,7 +138,7 @@
   .logo { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
   .logo b {
     font: 700 26px/1 var(--display); letter-spacing: .18em; color: var(--text);
-    text-shadow: 0 0 18px rgba(255, 70, 85, .45);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
   }
   .logo b::first-letter { color: var(--accent); }
   .logo span {
@@ -101,7 +172,7 @@
   .brief summary::-webkit-details-marker { display: none; }
   .brief summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 18px; }
   .brief[open] summary::after { content: "−"; }
-  .brief-body { padding: 0 18px 16px; color: #c3ccd6; font-size: 13px; }
+  .brief-body { padding: 0 18px 16px; color: var(--text-2); font-size: 13px; }
   .brief-body p { margin: 0 0 6px; }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--muted); }
   .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
@@ -168,9 +239,10 @@
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   }
   .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .portrait img[data-retry] { visibility: hidden; } /* 다시 받는 중에는 깨진 그림 아이콘 숨김 */
   .portrait::after {
     content: ""; position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 60%, rgba(6, 8, 12, .5));
+    background: linear-gradient(180deg, transparent 60%, color-mix(in srgb, var(--bg) 50%, transparent));
   }
   .names { flex: 1; min-width: 0; }
   .name { font-size: 18px; font-weight: 700; line-height: 1.25; }
@@ -180,11 +252,11 @@
     font-size: 11px; line-height: 1; padding: 4px 7px; color: var(--muted);
     border: 1px solid var(--line-hi); background: var(--well);
   }
-  .pill.co { color: var(--co); border-color: color-mix(in srgb, var(--co) 45%, transparent); }
+  .pill.co { color: color-mix(in srgb, var(--co) var(--co-strength, 100%), var(--text)); border-color: color-mix(in srgb, var(--co) 45%, transparent); }
   .pill.mode { font: 700 11px/1 var(--display); letter-spacing: .1em; }
-  .pill.pve { color: var(--green); border-color: rgba(85, 227, 154, .4); }
-  .pill.pvp { color: var(--accent); border-color: rgba(255, 70, 85, .4); }
-  .pill.fav { color: var(--pink); border-color: rgba(255, 111, 216, .45); }
+  .pill.pve { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
+  .pill.pvp { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .pill.fav { color: var(--pink); border-color: color-mix(in srgb, var(--pink) 45%, transparent); }
 
   .sec-title {
     font: 600 11px/1 var(--display); letter-spacing: .22em; color: var(--muted);
@@ -215,13 +287,13 @@
     content: attr(data-n); position: absolute; left: 7px; top: 7px;
     font: 700 11px/1 var(--display); color: var(--amber);
   }
-  .ol > div:first-child { border-color: rgba(255, 181, 71, .45); }
+  .ol > div:first-child { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
   .ol .hint { display: block; font-size: 11px; color: var(--muted); }
 
   .chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { font-size: 12px; padding: 4px 8px; background: var(--well); border: 1px solid var(--line-hi); }
   .tag.cube:first-child { border-color: var(--cyan); color: var(--cyan); }
-  .tag.opt { color: #c3ccd6; }
+  .tag.opt { color: var(--text-2); }
   .tag.use { color: var(--cyan); background: var(--cyan-soft); border-color: transparent; }
 
   .gear { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
@@ -327,7 +399,7 @@ function card(n) {
   return `
   <article class="card" data-co="${esc(n.company)}">
     <div class="head">
-      <div class="portrait">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</div>
+      <div class="portrait">${n.image ? `<img src="${esc(n.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="retryImg(this)">` : ""}</div>
       <div class="names">
         <div class="name">${esc(n.name)}</div>
         ${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ""}
@@ -364,6 +436,14 @@ function card(n) {
     </div>
     ${n.footnotes.length ? `<ul class="notes">${n.footnotes.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
   </article>`;
+}
+
+// 사진을 못 받아오면(구글이 한꺼번에 오는 요청을 잠깐 막을 때가 있음) 조금 기다렸다가 다시 시도. 3번 실패하면 빈 칸으로 둠
+function retryImg(img) {
+  const n = Number(img.dataset.retry || 0);
+  if (n >= 3) { img.remove(); return; }
+  img.dataset.retry = n + 1;
+  setTimeout(() => { img.src = img.src.replace(/&r=\d+$/, "") + "&r=" + (n + 1); }, 1000 * (n + 1) + Math.random() * 500);
 }
 
 function render() {
