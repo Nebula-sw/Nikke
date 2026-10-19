@@ -18,26 +18,13 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <script>
-  // 저장된 화면 모드·색 테마를 그리기 전에 적용 (깜빡임 방지)
-  // 바꾸는 화면은 맨 위 Nebula 바의 [테마] 버튼(nebula.kim/switcher.js). 저장 이름 'theme'·'palette'는 그쪽과 약속된 값
+  // 저장된 화면 모드(라이트/다크/시스템)를 그리기 전에 적용 (깜빡임 방지)
+  // 바꾸는 화면은 맨 위 Nebula 바의 [테마] 버튼(nebula.kim/switcher.js). 저장 이름 'theme'은 그쪽과 약속된 값
+  // 색 테마는 없음 (니케는 빨강 고정) → window.nebulaTheme 을 정하지 않으면 바에 화면 모드만 나옴
   try {
     const t = localStorage.getItem('theme');
     if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-    const p = localStorage.getItem('palette');
-    if (p) document.documentElement.dataset.palette = p;
   } catch {}
-  // 바의 [테마] 창에 보여줄 이 사이트의 색 테마 목록 (아래 CSS의 [data-palette=...] 와 id가 같아야 함)
-  window.nebulaTheme = {
-    defaultPalette: "red",
-    palettes: [
-      { id: "red", name: "레드", color: "#ff4655" },
-      { id: "orange", name: "오렌지", color: "#ff8a3d" },
-      { id: "pink", name: "핑크", color: "#ff5fa8" },
-      { id: "violet", name: "바이올렛", color: "#a77bff" },
-      { id: "blue", name: "블루", color: "#4f8dff" },
-      { id: "mint", name: "민트", color: "#2fd3a5" },
-    ],
-  };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,10 +40,7 @@
     --text: #e6edf3;
     --muted: #7d8a99;
     --dim: #4a5664;
-    /* 포인트 색: 색 테마(--acc-dark/--acc-light, 아래 [data-palette])에서 모드에 맞는 쪽을 씀 */
-    --acc-dark: #ff4655;
-    --acc-light: #e5323f;
-    --accent: var(--acc-dark);
+    --accent: #ff4655; /* 포인트 색 (라이트 모드는 아래에서 조금 진하게) */
     --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
     --text-2: #c3ccd6; /* 본문보다 살짝 흐린 글자 */
     --amber: #ffb547;
@@ -84,13 +68,6 @@
     --grid-line: rgba(58, 215, 245, .035);
   }
 
-  /* ---------- 색 테마 (맨 위 바에서 고름) ---------- */
-  [data-palette="orange"] { --acc-dark: #ff8a3d; --acc-light: #d9601a; }
-  [data-palette="pink"]   { --acc-dark: #ff5fa8; --acc-light: #d83384; }
-  [data-palette="violet"] { --acc-dark: #a77bff; --acc-light: #7a4fe6; }
-  [data-palette="blue"]   { --acc-dark: #4f8dff; --acc-light: #2b67dc; }
-  [data-palette="mint"]   { --acc-dark: #2fd3a5; --acc-light: #0d9a74; }
-
   /* ---------- 라이트 모드 ----------
      바에서 '라이트'를 골랐을 때 + '시스템'인데 기기가 라이트일 때. 두 블록 내용은 같게 유지 */
   :root[data-theme="light"] {
@@ -98,7 +75,7 @@
     --bg: #eef1f5; --panel: #ffffff; --panel-2: #f6f8fb; --well: #f1f4f8;
     --line: #dbe1e8; --line-hi: #c3ccd6;
     --text: #121820; --text-2: #3d4856; --muted: #5b6878; --dim: #8a96a4;
-    --accent: var(--acc-light);
+    --accent: #e5323f;
     --amber: #c27c00; --cyan: #0a93b5; --cyan-soft: rgba(10, 147, 181, .1); --green: #12985a; --pink: #c93a9f;
     --st1: #5b6878; --st2: #0a93b5; --st3: #d9711a; --st4: #c42fa6;
     --nebula-bar-bg: #ffffff; --nebula-bar-fg: #121820; --nebula-bar-muted: #5b6878;
@@ -112,7 +89,7 @@
       --bg: #eef1f5; --panel: #ffffff; --panel-2: #f6f8fb; --well: #f1f4f8;
       --line: #dbe1e8; --line-hi: #c3ccd6;
       --text: #121820; --text-2: #3d4856; --muted: #5b6878; --dim: #8a96a4;
-      --accent: var(--acc-light);
+      --accent: #e5323f;
       --amber: #c27c00; --cyan: #0a93b5; --cyan-soft: rgba(10, 147, 181, .1); --green: #12985a; --pink: #c93a9f;
       --st1: #5b6878; --st2: #0a93b5; --st3: #d9711a; --st4: #c42fa6;
       --nebula-bar-bg: #ffffff; --nebula-bar-fg: #121820; --nebula-bar-muted: #5b6878;
