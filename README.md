@@ -15,6 +15,7 @@ Nebula 사이트 모음([nebula.kim](https://nebula.kim))의 하나로, 맨 위 
 - **카드 색 = 속성 색** (작열 빨강 · 수냉 파랑 · 풍압 초록 · 전격 보라 · 철갑 노랑). 기업은 색으로 나누지 않음
 - 라이트 / 다크 / 시스템 모드 (맨 위 바의 [테마] 버튼). 포인트 색은 빨강 고정
 - 초상화를 못 받아오면 자동으로 몇 번 다시 시도
+- 마지막으로 받은 데이터를 브라우저에 저장해 두고, 다음에 열면 먼저 바로 보여준 뒤 새 데이터로 바꿈
 - 홈 화면에 추가하면 앱처럼 열림, 카톡 공유 썸네일
 
 ## 파일 구성
@@ -22,7 +23,7 @@ Nebula 사이트 모음([nebula.kim](https://nebula.kim))의 하나로, 맨 위 
 | 파일 | 역할 |
 |---|---|
 | `public/index.html` | 화면 전체 (스타일·필터·카드 그리기) |
-| `src/worker.js` | `/api/data`: 시트 → JSON (5분 캐시) / `/api/img`: 시트 이미지 중계 (구글이 다른 사이트에서 바로 띄우는 걸 막아서) |
+| `src/worker.js` | `/api/data`: 시트 → JSON (5분마다 뒤에서 새로 만들고, 그동안은 저장본을 바로 돌려줌) / `/api/img`: 시트 이미지 중계 (구글이 다른 사이트에서 바로 띄우는 걸 막아서, 브라우저에 1년 캐시) |
 | `wrangler.jsonc` | Cloudflare 설정 |
 | `public/favicon.svg`, `apple-touch-icon.png`, `icon-*.png`, `og.png`, `manifest.webmanifest` | 아이콘·썸네일·홈 화면 설정 (원본은 nebula-hub/docs/og) |
 

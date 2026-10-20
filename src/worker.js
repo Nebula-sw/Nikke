@@ -22,28 +22,39 @@ export default {
   },
 };
 
+// 시트 데이터: 5분이 지나도 저장해 둔 데이터를 "바로" 돌려주고, 새 데이터는 뒤에서 만들어 저장 (stale-while-revalidate)
+// → 사이트를 열 때 시트를 읽느라 기다리는 일이 거의 없음. 저장본은 하루까지 씀
+const STALE_SECONDS = 86400;
+const DATA_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" };
+
 async function handleData(request, ctx, fresh) {
   const cache = caches.default;
   const key = new Request(new URL("/api/data", request.url).toString());
   if (!fresh) {
     const hit = await cache.match(key);
-    if (hit) return hit;
+    if (hit) {
+      const builtAt = Number(hit.headers.get("x-built-at") || 0);
+      // 5분 지났으면 뒤에서 새로 만들기 (지금 요청은 기다리지 않음)
+      if (Date.now() - builtAt > CACHE_SECONDS * 1000) ctx.waitUntil(rebuildData(key).catch(() => {}));
+      return new Response(hit.body, { headers: DATA_HEADERS });
+    }
   }
   try {
-    const data = await buildData();
-    const res = new Response(JSON.stringify(data), {
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": `public, max-age=${CACHE_SECONDS}`,
-      },
-    });
-    ctx.waitUntil(cache.put(key, res.clone()));
-    return res;
+    return new Response(await rebuildData(key), { headers: DATA_HEADERS });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e.message || e) }), {
       status: 502, headers: { "content-type": "application/json; charset=utf-8" },
     });
   }
+}
+
+/** 시트를 읽어 JSON을 만들고 캐시에 저장 (만든 시각을 x-built-at에 적어 둠) */
+async function rebuildData(key) {
+  const body = JSON.stringify(await buildData());
+  await caches.default.put(key, new Response(body, {
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${STALE_SECONDS}`, "x-built-at": String(Date.now()) },
+  }));
+  return body;
 }
 
 // 시트 이미지는 다른 사이트에서 직접 띄울 수 없게 막혀 있어서(CORP: same-site) 여기서 대신 받아 전달
@@ -62,7 +73,8 @@ async function handleImage(request, ctx, src) {
   const res = new Response(upstream.body, {
     headers: {
       "content-type": upstream.headers.get("content-type") || "image/png",
-      "cache-control": "public, max-age=86400",
+      // 시트 이미지 주소는 그림마다 고유해서(그림이 바뀌면 주소도 바뀜) 1년 동안 다시 받을 필요 없음
+      "cache-control": "public, max-age=31536000, immutable",
     },
   });
   ctx.waitUntil(cache.put(key, res.clone()));

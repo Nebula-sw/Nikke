@@ -504,25 +504,44 @@ function setStatus(kind, msg) {
   document.getElementById("status").textContent = msg;
 }
 
+// 마지막으로 받은 데이터는 이 브라우저에 저장해 두고, 다음에 열 때 먼저 바로 그림 (그동안 새 데이터를 받아 바꿔 그림)
+const SAVED_KEY = "nikke-data";
+let shown = ""; // 지금 화면에 그린 데이터의 내용 요약
+const signature = data => JSON.stringify([data.list, data.intro]);
+
+function apply(data) {
+  shown = signature(data);
+  state.list = data.list.map(n => ({
+    ...n,
+    text: [n.name, n.sub, n.element, n.company, n.weapon, ...n.cube, ...n.extra, ...n.usage, ...n.overload.flat(), ...n.footnotes]
+      .join(" ").toLowerCase(),
+  }));
+  renderBrief(data.intro);
+  buildFilters();
+  render();
+  const t = new Date(data.updated).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  setStatus("ok", "Synced " + t);
+}
+
 async function refresh(fresh) {
   setStatus("load", "Syncing…");
   try {
     const data = await load(fresh);
-    state.list = data.list.map(n => ({
-      ...n,
-      text: [n.name, n.sub, n.element, n.company, n.weapon, ...n.cube, ...n.extra, ...n.usage, ...n.overload.flat(), ...n.footnotes]
-        .join(" ").toLowerCase(),
-    }));
-    renderBrief(data.intro);
-    buildFilters();
-    render();
-    const t = new Date(data.updated).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-    setStatus("ok", "Synced " + t);
+    // 내용(니케 목록·안내)이 화면과 같으면 다시 그리지 않음 (보던 화면·사진이 깜빡이지 않게)
+    if (signature(data) !== shown) apply(data);
+    else setStatus("ok", "Synced " + new Date(data.updated).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(data)); } catch {}
   } catch (e) {
     setStatus("err", "Sync failed");
     if (!state.list.length) document.getElementById("grid").innerHTML = `<div class="empty">${esc(e.message)}</div>`;
   }
 }
+
+// 저장본이 있으면 바로 그리기
+try {
+  const saved = localStorage.getItem(SAVED_KEY);
+  if (saved) apply(JSON.parse(saved));
+} catch {}
 
 document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
 document.getElementById("reload").addEventListener("click", () => refresh(true));
